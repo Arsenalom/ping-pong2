@@ -1,0 +1,140 @@
+from pygame import *
+from random import randint
+
+SCREEN_WIDTH = 700
+SCREEN_HEIGHT = 500
+
+class Ball(pygame.sprite.Sprite):
+    def __init__(self, color, width, height):
+        super().__init__()
+
+        self.image = pygame.Surface([width, height])
+        self.image.fill(BLACK)
+        self.image.set_colorkey(BLACK)
+
+        pygame.draw.rect(self.image, color, [0, 0, width, height])
+        self.velocity = [random.randint(4,8), random.randint(-8,8)]
+
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+
+    def bounce(self):
+        self.velocity[0] = -self.velocity[0]
+        self.velocity[1] = random.randint(-8,8)
+
+
+class Paddle(pygame.sprite.Sprite):
+    def __init__(self, color, width, height):
+        super().__init__()
+
+        self.image = pygame.Surface([width, height])
+        self.image.fill(BLACK)
+        self.image.set_colorkey(BLACK)
+
+        pygame.draw.rect(self.image, color, [0, 0, width, height])
+
+        self.rect = self.image.get_rect()
+
+    def move_up(self, pixels):
+        self.rect.y -= pixels
+        if self.rect.y < 0:
+            self.rect.y = 0
+
+    def move_down(self, pixels):
+        self.rect.y += pixels
+        if self.rect.y > SCREEN_HEIGHT - self.rect.height:
+            self.rect.y = SCREEN_HEIGHT - self.rect.height
+
+
+pygame.init()
+
+size = [SCREEN_WIDTH, SCREEN_HEIGHT]
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("Ping Pong")
+
+all_sprites_list = pygame.sprite.Group()
+
+ball = Ball(WHITE, 10, 10)
+ball.rect.x = SCREEN_WIDTH // 2
+ball.rect.y = SCREEN_HEIGHT // 2
+all_sprites_list.add(ball)
+
+player_paddle = Paddle(WHITE, 10, 75)
+player_paddle.rect.x = 20
+player_paddle.rect.y = 225
+all_sprites_list.add(player_paddle)
+
+computer_paddle = Paddle(WHITE, 10, 75)
+computer_paddle.rect.x = SCREEN_WIDTH - 30
+computer_paddle.rect.y = 225
+all_sprites_list.add(computer_paddle)
+
+player_score = 0
+computer_score = 0
+
+font = pygame.font.Font(None, 36)
+
+done = False
+clock = pygame.time.Clock()
+
+while not done:
+    # обработка событий
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+
+    ball.update()
+    
+    if pygame.sprite.collide_rect(ball, player_paddle) or pygame.sprite.collide_rect(ball, computer_paddle):
+        ball.bounce()
+        
+    if ball.rect.x > SCREEN_WIDTH - 10:
+        player_score += 1
+        ball.velocity[0] = -ball.velocity[0]
+        ball.rect.x = SCREEN_WIDTH // 2
+        ball.rect.y = SCREEN_HEIGHT // 2
+
+    if ball.rect.x < 0:
+        computer_score += 1
+        ball.velocity[0] = -ball.velocity[0]
+        ball.rect.x = SCREEN_WIDTH // 2
+        ball.rect.y = SCREEN_HEIGHT // 2
+
+    if ball.rect.y > SCREEN_HEIGHT - 10 or ball.rect.y < 0:
+        ball.velocity[1] = -ball.velocity[1]
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_UP]:
+        player_paddle.move_up(5)
+    if keys[pygame.K_DOWN]:
+        player_paddle.move_down(5)
+
+    
+    if ball.rect.y < computer_paddle.rect.y:
+        computer_paddle.move_up(3)
+    if ball.rect.y > computer_paddle.rect.y:
+        computer_paddle.move_down(3)
+
+    
+    screen.fill(BLACK)
+    pygame.draw.line(screen, WHITE, [SCREEN_WIDTH // 2, 0], [SCREEN_WIDTH // 2, SCREEN_HEIGHT], 5)
+    all_sprites_list.draw(screen)
+
+    
+    player_text = font.render(str(player_score), True, WHITE)
+    computer
+
+_text = font.render(str(computer_score), True, WHITE)
+    screen.blit(player_text, [250, 10])
+    screen.blit(computer_text, [420, 10])
+
+    pygame.display.flip()
+
+    
+    clock.tick(60)
+
+
+pygame.quit()
